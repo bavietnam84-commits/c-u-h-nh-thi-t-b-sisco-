@@ -1,0 +1,7 @@
+{
+  "name": "CiscoConfig AI Pro",
+  "description": "An advanced AI-powered assistant for automated Cisco switch and firewall configuration, featuring real-time voice interaction and smart CLI generation.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
