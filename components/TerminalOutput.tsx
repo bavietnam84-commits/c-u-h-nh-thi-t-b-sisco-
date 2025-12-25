@@ -1,16 +1,30 @@
 
 import React, { useState } from 'react';
-import { GeneratedConfig, ConnectionStatus } from '../types';
+import { GeneratedConfig, ConnectionStatus, HardwareStatus } from '../types';
 
 interface TerminalOutputProps {
   config: GeneratedConfig | null;
   isGenerating: boolean;
   onClear: () => void;
+  onSaveBackup: (name: string) => void;
   connectionStatus: ConnectionStatus;
+  hardwareStatus: HardwareStatus;
+  onDeployToHardware: () => Promise<void>;
 }
 
-const TerminalOutput: React.FC<TerminalOutputProps> = ({ config, isGenerating, onClear, connectionStatus }) => {
+const TerminalOutput: React.FC<TerminalOutputProps> = ({ 
+  config, 
+  isGenerating, 
+  onClear, 
+  onSaveBackup, 
+  connectionStatus, 
+  hardwareStatus,
+  onDeployToHardware
+}) => {
   const [activeTab, setActiveTab] = useState<'cli' | 'guide'>('cli');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [backupName, setBackupName] = useState('');
 
   const copyToClipboard = () => {
     if (config) {
@@ -24,6 +38,23 @@ const TerminalOutput: React.FC<TerminalOutputProps> = ({ config, isGenerating, o
     }
   };
 
+  const handleDeploy = async () => {
+    if (hardwareStatus !== 'READY') return;
+    setIsDeploying(true);
+    await onDeployToHardware();
+    setIsDeploying(false);
+  };
+
+  const handleSave = () => {
+    if (!backupName.trim()) {
+      onSaveBackup(`Backup ${new Date().toLocaleTimeString()}`);
+    } else {
+      onSaveBackup(backupName);
+    }
+    setIsSaving(false);
+    setBackupName('');
+  };
+
   return (
     <div className="bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl h-full flex flex-col overflow-hidden">
       {/* Terminal Header */}
@@ -33,29 +64,52 @@ const TerminalOutput: React.FC<TerminalOutputProps> = ({ config, isGenerating, o
           <div className="w-3 h-3 rounded-full bg-yellow-500/30"></div>
           <div className="w-3 h-3 rounded-full bg-blue-500/30"></div>
         </div>
+        
         <div className="flex bg-slate-900 rounded-lg p-1">
           <button 
             onClick={() => setActiveTab('cli')}
             className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'cli' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'text-slate-500 hover:text-slate-300'}`}
           >
-            CLI COMMANDS
+            CLI
           </button>
           <button 
             onClick={() => setActiveTab('guide')}
             className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'guide' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'text-slate-500 hover:text-slate-300'}`}
           >
-            EXPLANATION
+            GUIDE
           </button>
         </div>
+
         <div className="flex items-center gap-3">
           {config && (
-            <button 
-              onClick={onClear}
-              className="text-slate-500 hover:text-red-400 transition-colors text-sm"
-              title="Clear current config"
-            >
-              <i className="fas fa-trash-alt"></i>
-            </button>
+            <>
+              <button 
+                onClick={handleDeploy}
+                disabled={hardwareStatus !== 'READY' || isDeploying}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${
+                  hardwareStatus === 'READY' 
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20' 
+                  : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50'
+                }`}
+              >
+                {isDeploying ? <i className="fas fa-sync fa-spin"></i> : <i className="fas fa-bolt"></i>}
+                <span className="hidden lg:inline">Deploy to Hardware</span>
+              </button>
+              <button 
+                onClick={() => setIsSaving(true)}
+                className="text-slate-400 hover:text-emerald-400 transition-colors text-sm"
+                title="Lưu bản sao lưu"
+              >
+                <i className="fas fa-save"></i>
+              </button>
+              <button 
+                onClick={onClear}
+                className="text-slate-500 hover:text-red-400 transition-colors text-sm"
+                title="Xóa cấu hình"
+              >
+                <i className="fas fa-trash-alt"></i>
+              </button>
+            </>
           )}
           <button 
             id="copy-btn"
@@ -68,8 +122,29 @@ const TerminalOutput: React.FC<TerminalOutputProps> = ({ config, isGenerating, o
         </div>
       </div>
 
+      {/* Save Backup Dialog Overlay */}
+      {isSaving && (
+        <div className="absolute inset-0 z-20 bg-slate-950/90 flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-xs shadow-2xl">
+            <h4 className="text-white font-bold mb-4 text-sm">Lưu Bản Sao Lưu</h4>
+            <input 
+              autoFocus
+              type="text"
+              placeholder="Tên bản sao (VD: Core Switch Setup)"
+              value={backupName}
+              onChange={(e) => setBackupName(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white mb-4 focus:ring-1 focus:ring-blue-500 outline-none"
+            />
+            <div className="flex gap-2">
+              <button onClick={() => setIsSaving(false)} className="flex-1 py-2 text-xs text-slate-400 hover:text-white transition-colors">Hủy</button>
+              <button onClick={handleSave} className="flex-1 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg">Lưu lại</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-6 bg-[#0B0E14] custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-6 bg-[#0B0E14] custom-scrollbar relative">
         {isGenerating ? (
           <div className="h-full flex flex-col items-center justify-center space-y-4">
             <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
@@ -80,7 +155,12 @@ const TerminalOutput: React.FC<TerminalOutputProps> = ({ config, isGenerating, o
             <div className="cli-font text-sm">
               <div className="text-slate-500 mb-4 flex justify-between items-center">
                 <span>! Cisco Configuration Generated by AI</span>
-                <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">LINK ACTIVE</span>
+                <div className="flex gap-2">
+                  <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 uppercase">LINK ACTIVE</span>
+                  {hardwareStatus === 'READY' && (
+                    <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 uppercase">HW READY</span>
+                  )}
+                </div>
               </div>
               <pre className="text-green-400 leading-relaxed whitespace-pre-wrap">{config.cliCommands}</pre>
             </div>
@@ -110,7 +190,7 @@ const TerminalOutput: React.FC<TerminalOutputProps> = ({ config, isGenerating, o
             {connectionStatus === 'CONNECTED' ? (
               <>
                 <i className="fas fa-terminal text-6xl mb-4 text-green-500/50"></i>
-                <p className="font-mono text-sm">Thiết bị đã sẵn sàng. Hãy nhập yêu cầu cấu hình.</p>
+                <p className="font-mono text-sm">Thiết bị ảo đã sẵn sàng. Hãy nhập yêu cầu cấu hình.</p>
               </>
             ) : (
               <>
@@ -129,6 +209,9 @@ const TerminalOutput: React.FC<TerminalOutputProps> = ({ config, isGenerating, o
           <span className={connectionStatus === 'CONNECTED' ? 'text-green-500' : 'text-red-500'}>
             LINK: {connectionStatus}
           </span>
+          {hardwareStatus === 'READY' && (
+            <span className="text-indigo-400">HW: PORT ACTIVE</span>
+          )}
         </div>
         <div>
           {config ? `LEN: ${config.cliCommands.length} Chars` : 'IDLE'}

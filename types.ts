@@ -7,22 +7,45 @@ export enum DeviceType {
 }
 
 export type ConnectionStatus = 'CONNECTED' | 'DISCONNECTED' | 'CONNECTING';
-
-export interface DeviceConnectionState {
-  status: ConnectionStatus;
-  lastConnected?: Date;
-}
-
-export interface ConfigRequest {
-  deviceType: DeviceType;
-  description: string;
-  parameters: Record<string, any>;
-}
+export type HardwareStatus = 'READY' | 'BUSY' | 'DISCONNECTED';
 
 export interface GeneratedConfig {
   cliCommands: string;
   explanation: string;
   bestPractices: string[];
+  preCheckCommands: string[];
+  postCheckCommands: string[];
+  rollbackCommands: string;
+}
+
+export interface ComplianceIssue {
+  severity: 'high' | 'medium' | 'low';
+  issue: string;
+  remediation: string;
+}
+
+export interface TopologyNode {
+  localInterface: string;
+  neighborDevice: string;
+  neighborInterface: string;
+  platform: string;
+}
+
+export interface ConfigBackup {
+  id: string;
+  name: string;
+  timestamp: string;
+  deviceType: DeviceType;
+  config: GeneratedConfig;
+}
+
+export interface DeviceHealth {
+  cpu: number;
+  memory: number;
+  temp: number;
+  uptime: string;
+  status: 'Healthy' | 'Warning' | 'Critical';
+  logs: string[];
 }
 
 export interface TranscriptionItem {

@@ -7,9 +7,10 @@ interface SidebarProps {
   onDeviceChange: (device: DeviceType) => void;
   connections: Record<DeviceType, ConnectionStatus>;
   onConnect: (type: DeviceType) => void;
+  onOpenGuide: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeDevice, onDeviceChange, connections, onConnect }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeDevice, onDeviceChange, connections, onConnect, onOpenGuide }) => {
   const menuItems = [
     { type: DeviceType.SWITCH, icon: 'fa-server', label: 'Switch (IOS)' },
     { type: DeviceType.FIREWALL, icon: 'fa-shield-halved', label: 'Firewall (ASA)' },
@@ -77,8 +78,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeDevice, onDeviceChange, connect
         ))}
       </nav>
 
-      <div className="p-4 border-t border-slate-900 hidden lg:block">
-        <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+      <div className="p-4 border-t border-slate-900 space-y-4">
+        {/* User Guide Button - Giờ đây hiển thị trên cả mobile (dưới dạng icon) và desktop */}
+        <button 
+          onClick={onOpenGuide}
+          className="flex w-full items-center justify-center lg:justify-start gap-3 px-4 py-3 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 text-slate-400 hover:text-white transition-all group"
+          title="Hướng dẫn sử dụng"
+        >
+          <i className="fas fa-circle-question text-blue-400 group-hover:scale-110 transition-transform text-lg lg:text-base"></i>
+          <span className="text-sm font-medium hidden lg:block">Hướng dẫn sử dụng</span>
+        </button>
+
+        <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800 hidden lg:block">
           <p className="text-xs text-slate-500 mb-2 uppercase tracking-widest font-bold">System Health</p>
           <div className="flex items-center justify-between text-[10px] mb-1">
             <span>Core Engine</span>
