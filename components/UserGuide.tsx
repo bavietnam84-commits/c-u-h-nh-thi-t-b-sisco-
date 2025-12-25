@@ -6,6 +6,18 @@ interface UserGuideProps {
   onClose: () => void;
 }
 
+const CiscoLogo = ({ className = "w-10 h-10" }: { className?: string }) => (
+  <svg viewBox="0 0 100 60" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="32" width="6" height="18" rx="3" fill="currentColor" />
+    <rect x="22" y="22" width="6" height="28" rx="3" fill="currentColor" />
+    <rect x="34" y="12" width="6" height="38" rx="3" fill="currentColor" />
+    <rect x="46" y="2" width="6" height="48" rx="3" fill="currentColor" />
+    <rect x="58" y="12" width="6" height="38" rx="3" fill="currentColor" />
+    <rect x="70" y="22" width="6" height="28" rx="3" fill="currentColor" />
+    <rect x="82" y="32" width="6" height="18" rx="3" fill="currentColor" />
+  </svg>
+);
+
 const UserGuide: React.FC<UserGuideProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
@@ -47,13 +59,13 @@ const UserGuide: React.FC<UserGuideProps> = ({ isOpen, onClose }) => {
       <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-800/30">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-              <i className="fas fa-graduation-cap"></i>
+          <div className="flex items-center gap-4">
+            <div className="text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]">
+              <CiscoLogo className="w-12 h-8" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Hướng Dẫn Sử Dụng</h2>
-              <p className="text-xs text-slate-400">Hệ thống tự động hóa Cisco AI Pro v1.1</p>
+              <h2 className="text-xl font-bold text-white tracking-tight uppercase italic">CISCO<span className="text-blue-500">AI</span> GUIDE</h2>
+              <p className="text-xs text-slate-400">Enterprise Automation Ecosystem v2.1</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
@@ -79,7 +91,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ isOpen, onClose }) => {
             <i className="fas fa-lightbulb text-blue-400 mt-1"></i>
             <div className="text-xs text-blue-200/80 leading-relaxed">
               <span className="font-bold text-blue-400 block mb-1">Mẹo nhỏ:</span>
-              Bạn có thể sao chép nhanh toàn bộ lệnh CLI bằng nút Copy ở góc phải bảng Terminal. Mọi cấu hình tạo ra đều tuân thủ các tiêu chuẩn bảo mật cao nhất của Cisco.
+              Bạn có thể sử dụng tính năng "Auto Discovery" trong mục Topology Mapping để tự động quét các thiết bị lân cận mà không cần nhập thủ công.
             </div>
           </div>
         </div>
@@ -88,9 +100,9 @@ const UserGuide: React.FC<UserGuideProps> = ({ isOpen, onClose }) => {
         <div className="p-4 bg-slate-950/50 border-t border-slate-800 flex justify-end">
           <button 
             onClick={onClose}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-900/40"
           >
-            Đã hiểu, bắt đầu thôi!
+            Bắt đầu trải nghiệm
           </button>
         </div>
       </div>

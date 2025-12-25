@@ -18,6 +18,25 @@ export interface GeneratedConfig {
   rollbackCommands: string;
 }
 
+export interface VisualNode {
+  id: string;
+  name: string;
+  type: DeviceType | 'NEIGHBOR';
+  status: 'active' | 'configured' | 'idle';
+}
+
+export interface VisualLink {
+  source: string;
+  target: string;
+  label: string;
+  isConfiguring: boolean;
+}
+
+export interface TopologyData {
+  nodes: VisualNode[];
+  links: VisualLink[];
+}
+
 export interface ComplianceIssue {
   severity: 'high' | 'medium' | 'low';
   issue: string;
@@ -29,6 +48,19 @@ export interface TopologyNode {
   neighborDevice: string;
   neighborInterface: string;
   platform: string;
+}
+
+export interface DeviceInterface {
+  interface: string;
+  ipAddress: string;
+  status: string;
+  protocol: string;
+}
+
+export interface DeviceNetworkSummary {
+  hostname: string;
+  interfaces: DeviceInterface[];
+  uptime?: string;
 }
 
 export interface ConfigBackup {

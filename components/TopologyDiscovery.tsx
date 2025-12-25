@@ -7,9 +7,10 @@ interface TopologyDiscoveryProps {
   hardwareStatus: HardwareStatus;
   onSendCommand: (cmd: string) => Promise<void>;
   serialPort: any;
+  onNodesFound?: (nodes: TopologyNode[]) => void;
 }
 
-const TopologyDiscovery: React.FC<TopologyDiscoveryProps> = ({ hardwareStatus, onSendCommand, serialPort }) => {
+const TopologyDiscovery: React.FC<TopologyDiscoveryProps> = ({ hardwareStatus, onSendCommand, serialPort, onNodesFound }) => {
   const [nodes, setNodes] = useState<TopologyNode[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -22,6 +23,7 @@ const TopologyDiscovery: React.FC<TopologyDiscoveryProps> = ({ hardwareStatus, o
     try {
       const result = await analyzeTopology(data);
       setNodes(result);
+      if (onNodesFound) onNodesFound(result);
     } catch (error) {
       console.error("Topology analysis failed:", error);
     } finally {
@@ -36,22 +38,14 @@ const TopologyDiscovery: React.FC<TopologyDiscoveryProps> = ({ hardwareStatus, o
     setDiscoveryLog(["Initiating Auto-Discovery protocol...", "Sending 'show cdp neighbors'...", "Sending 'show lldp neighbors'..."]);
     
     try {
-      // 1. Gửi lệnh lấy dữ liệu
       await onSendCommand('terminal length 0');
       await onSendCommand('show cdp neighbors');
       await onSendCommand('show lldp neighbors');
 
-      // 2. Mô phỏng việc nhận dữ liệu từ buffer (vì Web Serial Reader phức tạp để đồng bộ hóa hoàn toàn trong 1 click)
-      // Trong thực tế, chúng ta sẽ lắng nghe luồng dữ liệu. Ở đây chúng ta mô phỏng quá trình nhận và phân tích.
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
       setDiscoveryLog(prev => [...prev, "Data received from buffer.", "Parsing neighbor table..."]);
       
-      // Giả lập dữ liệu nhận được để AI xử lý nếu là bản demo, 
-      // hoặc lấy từ một buffer tập trung nếu App.tsx quản lý nó.
       const mockCdpOutput = `
-        Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge
-                          S - Switch, H - Host, I - IGMP, r - Repeater, P - VoIP-Phone
         Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
         SW-CORE-01       Gig 1/0/24        152              S I   WS-C3850  Gig 1/0/1
         AP-FLOOR-02      Gig 1/0/5         124              H T   AIR-AP2802 Gig 0
@@ -140,19 +134,15 @@ const TopologyDiscovery: React.FC<TopologyDiscoveryProps> = ({ hardwareStatus, o
                       <span className="text-[9px] text-slate-500 font-bold uppercase">Interface</span>
                       <span className="text-blue-400 font-mono text-xs font-bold">{node.localInterface}</span>
                     </div>
-                    
                     <div className="flex flex-col items-center">
                       <div className="h-px w-12 bg-gradient-to-r from-blue-500/20 via-blue-500 to-blue-500/20 mb-1"></div>
                       <span className="text-[8px] text-slate-600 font-mono">{node.platform}</span>
                     </div>
-
                     <div className="flex flex-col text-right">
                       <span className="text-[9px] text-slate-500 font-bold uppercase">{node.neighborDevice}</span>
                       <span className="text-emerald-400 font-mono text-xs font-bold">{node.neighborInterface}</span>
                     </div>
                   </div>
-                  
-                  {/* Visual Connection Line */}
                   <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
               ))}
